@@ -3,6 +3,7 @@ from datetime import datetime
 from aiogram.filters import Command, Text
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
 from config import load_config
+import sqlite3 as sq
 
 registration: dict = {(2023, 8, 2): 'Олимпиада Систематика',
                       (2023, 8, 4): 'Олимпиада по биоллогии'
@@ -56,11 +57,21 @@ button_1: KeyboardButton = KeyboardButton(text='Старт регистраци�
 button_2: KeyboardButton = KeyboardButton(text='Старт олимпиад')
 keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(keyboard=[[button_1, button_2]],
                                                         resize_keyboard=True)
+conn = sq.connect('db.db', check_same_thread=False)
+cursor = conn.cursor()
 
 
+
+def db_table_val(user_id: int, state: str):
+    conn = sq.connect('db.db', check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO users (user_id, state) VALUES (?, ?)', (user_id, state))
+    conn.commit()
+    conn.close()
 
 @dp.message(Command(commands=['start']))
 async def command_start(message: Message):
+    db_table_val(user_id=message.from_user.id, state='not_ignore')
     await message.answer(text='Расписание ближайших олимпиад', reply_markup=keyboard)
 #        await create_profile(user_id=message.from_user.id, state='not_ignore')
 
@@ -71,7 +82,6 @@ async def send_registration(message: Message):
 @dp.message(Text(text='Старт олимпиад'))
 async def send_start(message: Message):
     await message.answer(text=f'На следующей неделе начинаются олимпиады: \n{olympic_start}')  # ,reply_markup=ReplyKeyboardRemove())
-
 
 
 if __name__ == '__main__':
