@@ -2,28 +2,11 @@ from aiogram import Bot, Dispatcher
 from datetime import datetime
 from aiogram.filters import Command, Text
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from config import load_config
 import sqlite3 as sq
+from texts import registration, starts, ru_months
 
-registration: dict = {(2023, 8, 2): 'Олимпиада Систематика',
-                      (2023, 8, 4): 'Олимпиада по биоллогии'
-                      }
-
-starts: dict = {(2023, 8, 3): 'Олимпиада Систематика',
-                (2023, 8, 5): 'Олимпиада по биоллогии'
-                }
-ru_months = {1: 'января',
-                   2: 'февраля',
-                   3: 'марта',
-                   4: 'апреля',
-                   5: 'мая',
-                   6: 'июня',
-                   7: 'июля',
-                   8: 'августа',
-                   9: 'сентября',
-                   10: 'октября',
-                   11: 'ноября',
-                   12: 'декабря'}
 
 def close_events(my_dict):
     result: dict = {}
@@ -52,27 +35,47 @@ superadmin = config.tg_bot.admin_ids[0]
 
 bot: Bot = Bot(token=config.tg_bot.token)
 dp: Dispatcher = Dispatcher()
+kb_builder: ReplyKeyboardBuilder = ReplyKeyboardBuilder()
 
 button_1: KeyboardButton = KeyboardButton(text='Старт регистраций')
 button_2: KeyboardButton = KeyboardButton(text='Старт олимпиад')
-keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(keyboard=[[button_1, button_2]],
-                                                        resize_keyboard=True)
-conn = sq.connect('db.db', check_same_thread=False)
-cursor = conn.cursor()
-
+button_3: KeyboardButton = KeyboardButton(text='Напомнить/отказаться')
+#keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(keyboard=[[button_1, button_2]],
+#                                                        resize_keyboard=True)
+kb_builder.row(button_1, button_2, width=2)
+kb_builder.row(button_3, width=1)
 
 
 def db_table_val(user_id: int, state: str):
     conn = sq.connect('db.db', check_same_thread=False)
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO users (user_id, state) VALUES (?, ?)', (user_id, state))
+    user = cursor.execute(f'SELECT 1 FROM users WHERE user_id == "{user_id}"').fetchone()
+    if not user:
+        cursor.execute('INSERT INTO users (user_id, state) VALUES (?, ?)', (user_id, state))
     conn.commit()
     conn.close()
+
+def db_change_state(user_id: int):
+    conn = sq.connect('db.db', check_same_thread=False)
+    cursor = conn.cursor()
+    state = cursor.execute(f'SELECT state FROM users WHERE user_id == "{user_id}"').fetchall()
+    if state[0][0] == 'not_ignore':
+        #change to 'ignore'
+        cursor.execute(f'UPDATE users SET state = "ignore" WHERE user_id == "{user_id}"')
+        text = 'Вы отказались от уведомлений.'
+    else:
+        #change to 'not_ignore'
+        cursor.execute(f'UPDATE users SET state = "not_ignore" WHERE user_id == "{user_id}"')
+        text = 'Вы согласились на уведомления.'
+    conn.commit()
+    conn.close()
+    return text
+
 
 @dp.message(Command(commands=['start']))
 async def command_start(message: Message):
     db_table_val(user_id=message.from_user.id, state='not_ignore')
-    await message.answer(text='Расписание ближайших олимпиад', reply_markup=keyboard)
+    await message.answer(text='Расписание ближайших олимпиад', reply_markup=kb_builder.as_markup(resize_keyboard=True))
 #        await create_profile(user_id=message.from_user.id, state='not_ignore')
 
 @dp.message(Text(text='Старт регистраций'))
@@ -81,7 +84,11 @@ async def send_registration(message: Message):
 
 @dp.message(Text(text='Старт олимпиад'))
 async def send_start(message: Message):
-    await message.answer(text=f'На следующей неделе начинаются олимпиады: \n{olympic_start}')  # ,reply_markup=ReplyKeyboardRemove())
+    await message.answer(text=f'На следующей неделе начинаются олимпиады: \n{olympic_start}')
+
+@dp.message(Text(text='Напомнить/отказаться'))
+async def send_start(message: Message):
+    await message.answer(text=f'{db_change_state(message.from_user.id)}')
 
 
 if __name__ == '__main__':
