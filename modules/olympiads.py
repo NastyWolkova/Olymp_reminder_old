@@ -1,18 +1,7 @@
 import sqlite3 as sq
 import datetime
+from texts import ru_months
 
-ru_months = {'01': 'января',
-             '02': 'февраля',
-             '03': 'марта',
-             '04': 'апреля',
-             '05': 'мая',
-             '06': 'июня',
-             '07': 'июля',
-             '08': 'августа',
-             '09': 'сентября',
-             '10': 'октября',
-             '11': 'ноября',
-             '12': 'декабря'}
 
 queries: list = ['SELECT name, date_start, date_finish FROM olympiads', #olympiads and dates
                  'SELECT name, start_reg, finish_reg FROM olympiads',   #registrations and dates
@@ -47,7 +36,7 @@ print(send_dates(queries[0]))
 print(send_dates(queries[1]))
 
 
-#funtion for change status of olympiads and registarations
+#function for change status of olympiads and registarations
 def db_find_olymp(sql: str, ):
     with sq.connect('db.db', check_same_thread=False) as conn:
         cursor = conn.cursor()
@@ -67,10 +56,3 @@ def db_find_olymp(sql: str, ):
 
 
 db_find_olymp(queries[3])
-
-
-
-
-
-
-

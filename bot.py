@@ -4,30 +4,8 @@ from aiogram.filters import Command, Text
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from config import load_config
-import sqlite3 as sq
-from texts import registration, starts, ru_months
+from modules import*
 
-
-def close_events(my_dict):
-    result: dict = {}
-    new_key: str
-    for key in my_dict:
-        delta = datetime(*key) - datetime.now()
-        if delta.days <= 7:
-            new_key = f'{key[2]} {ru_months[key[1]]}'
-            result[new_key] = my_dict[key]
-    return result
-
-olympic_reg = close_events(registration)
-olympic_start = close_events(starts)
-
-# def create_profile(user_id, state):
-# #    global db, cursor
-#     with sq.connect('olympic_bot/ids.db') as db:
-#         cursor = db.cursor()
-#     #user = cur.execute(f'SELECT 1 FROM ids WHERE user_id == "{user_id}"').fetchone()
-#     #if not user:
-#         cursor.execute('INSERT INTO ids VALUES(?,?)', (user_id, state))
 
 
 config = load_config('.env')
@@ -44,32 +22,6 @@ button_3: KeyboardButton = KeyboardButton(text='Напомнить/отказа�
 #                                                        resize_keyboard=True)
 kb_builder.row(button_1, button_2, width=2)
 kb_builder.row(button_3, width=1)
-
-
-def db_table_val(user_id: int, state: str):
-    conn = sq.connect('db.db', check_same_thread=False)
-    cursor = conn.cursor()
-    user = cursor.execute(f'SELECT 1 FROM users WHERE user_id == "{user_id}"').fetchone()
-    if not user:
-        cursor.execute('INSERT INTO users (user_id, state) VALUES (?, ?)', (user_id, state))
-    conn.commit()
-    conn.close()
-
-def db_change_state(user_id: int):
-    conn = sq.connect('db.db', check_same_thread=False)
-    cursor = conn.cursor()
-    state = cursor.execute(f'SELECT state FROM users WHERE user_id == "{user_id}"').fetchall()
-    if state[0][0] == 'not_ignore':
-        #change to 'ignore'
-        cursor.execute(f'UPDATE users SET state = "ignore" WHERE user_id == "{user_id}"')
-        text = 'Вы отказались от уведомлений.'
-    else:
-        #change to 'not_ignore'
-        cursor.execute(f'UPDATE users SET state = "not_ignore" WHERE user_id == "{user_id}"')
-        text = 'Вы согласились на уведомления.'
-    conn.commit()
-    conn.close()
-    return text
 
 
 @dp.message(Command(commands=['start']))
