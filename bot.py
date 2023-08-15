@@ -27,33 +27,24 @@ kb_builder.row(button_3, width=1)
 async def command_start(message: Message):
     db_table_val(user_id=message.from_user.id, state='not_ignore')
     await message.answer(text='Расписание ближайших олимпиад', reply_markup=kb_builder.as_markup(resize_keyboard=True))
-#        await create_profile(user_id=message.from_user.id, state='not_ignore')
+
 
 @dp.message(Command(commands=['update']))
 async def command_start(message: Message):
-#    change_status_olymp()
-#    change_status_reg()
-    # olymp = send_dates("SELECT name, date_start, date_finish FROM olympiads WHERE status_ol == 1")
-    # reg = send_dates("SELECT name, start_reg, finish_reg FROM olympiads WHERE status_reg == 1")
     await message.answer(f'{change_status_reg()} \n{change_status_olymp()}')
-    # if olymp:
-    #     await message.answer(f'START: \n{olymp}')
-    # if reg:
-    #     await message.answer(f'REGISTR: \n{reg}')
-    # else:
-    #     await message.answer(f'empty now')
+
 
 
 
 @dp.message(Text(text='Старт регистраций'))
 async def send_registration(message: Message):
-    spisok = send_dates("SELECT name, date_start, date_finish, form, point FROM olympiads WHERE status_ol == 1")
+    spisok = send_dates("SELECT name, start_reg, finish_reg, form, point FROM olympiads WHERE status_reg == 1")
     for item in spisok:
         await message.answer(text=f'ОТКРЫТА РЕГИСТРАЦИЯ НА: {item}')
 
 @dp.message(Text(text='Старт олимпиад'))
 async def send_start(message: Message):
-    spisok = send_dates("SELECT name, start_reg, finish_reg, form, point FROM olympiads WHERE status_reg == 1")
+    spisok = send_dates("SELECT name, date_start, date_finish, form, point FROM olympiads WHERE status_ol == 1")
     for item in spisok:
         await message.answer(text=f'БЛИЖАЙШАЯ ОЛИМПИАДА: {item}')
 

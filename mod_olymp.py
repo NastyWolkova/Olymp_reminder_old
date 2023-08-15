@@ -40,19 +40,18 @@ def change_status_olymp():
         cursor = conn.cursor()
         conv = '%Y-%m-%d'
         olymps = cursor.execute('SELECT num, date_start, date_finish FROM olympiads').fetchall()
-        print(olymps)
+        print(olymps, type(olymps))
         score: int = 0
         for item in olymps:
             start = datetime.datetime.strptime(item[1], conv)
             finish = datetime.datetime.strptime(item[2], conv)
             delta1 = start - datetime.datetime.now()
             delta2 = finish - datetime.datetime.now()
-            if (delta1.days != delta2.days and delta1.days <= 7 and delta2.days > 0) or delta1.days <= 7:
+            if (delta1.days >= 0 and delta1.days < 7) or (delta1.days < 0 and delta2.days >= 0):
                 cursor.execute(f'UPDATE olympiads SET status_ol = 1 WHERE num == "{item[0]}"')
                 score += 1
             else:
                 cursor.execute(f'UPDATE olympiads SET status_ol = 0 WHERE num == "{item[0]}"')
-                score += 1
     return score
 
 def change_status_reg():
@@ -68,10 +67,9 @@ def change_status_reg():
             delta1 = start - datetime.datetime.now()
             delta2 = finish - datetime.datetime.now()
             print(delta1, delta2)
-            if (delta1.days != delta2.days and delta1.days < 7 and delta2.days >= 0) or delta1.days < 7:
+            if (delta1.days >= 0 and delta1.days < 7) or (delta1.days < 0 and delta2.days >= 0):
                 cursor.execute(f'UPDATE olympiads SET status_reg = 1 WHERE num == "{item[0]}"')
                 score += 1
             else:
                 cursor.execute(f'UPDATE olympiads SET status_reg = 0 WHERE num == "{item[0]}"')
-                score += 1
     return score
