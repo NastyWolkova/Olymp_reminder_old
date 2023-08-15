@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from config import load_config
 from mod_users import db_table_val, db_change_state
 from mod_olymp import send_dates, change_status_olymp, change_status_reg
+import surrogates
 
 
 config = load_config('.env')
@@ -34,13 +35,11 @@ async def command_start(message: Message):
     await message.answer(f'{change_status_reg()} \n{change_status_olymp()}')
 
 
-
-
 @dp.message(Text(text='Старт регистраций'))
 async def send_registration(message: Message):
     spisok = send_dates("SELECT name, start_reg, finish_reg, form, point FROM olympiads WHERE status_reg == 1")
     for item in spisok:
-        await message.answer(text=f'ОТКРЫТА РЕГИСТРАЦИЯ НА: {item}')
+        await message.answer(text=f'РЕГИСТРАЦИЯ НА ОЛИМПИАДУ: {item}')
 
 @dp.message(Text(text='Старт олимпиад'))
 async def send_start(message: Message):
@@ -52,6 +51,11 @@ async def send_start(message: Message):
 @dp.message(Text(text='Напомнить/отказаться'))
 async def send_start(message: Message):
     await message.answer(text=f'{db_change_state(message.from_user.id)}')
+
+@dp.message()
+async def send_start(message: Message):
+    arrow: str = surrogates.decode('⬇')
+    await message.answer(text=f'Для получения информации \nо начале олимпиад \nили регистрации на них,\nвоспользуйтесь меню {arrow}')
 
 
 if __name__ == '__main__':
