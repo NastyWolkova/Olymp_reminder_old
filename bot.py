@@ -1,11 +1,10 @@
 from aiogram import Bot, Dispatcher
-from datetime import datetime
 from aiogram.filters import Command, Text
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from config import load_config
-from modules import*
-
+from mod_users import db_table_val, db_change_state
+from mod_olymp import send_dates, change_status_olymp, change_status_reg
 
 
 config = load_config('.env')
@@ -30,13 +29,34 @@ async def command_start(message: Message):
     await message.answer(text='Расписание ближайших олимпиад', reply_markup=kb_builder.as_markup(resize_keyboard=True))
 #        await create_profile(user_id=message.from_user.id, state='not_ignore')
 
+@dp.message(Command(commands=['update']))
+async def command_start(message: Message):
+#    change_status_olymp()
+#    change_status_reg()
+    # olymp = send_dates("SELECT name, date_start, date_finish FROM olympiads WHERE status_ol == 1")
+    # reg = send_dates("SELECT name, start_reg, finish_reg FROM olympiads WHERE status_reg == 1")
+    await message.answer(f'{change_status_reg()} \n{change_status_olymp()}')
+    # if olymp:
+    #     await message.answer(f'START: \n{olymp}')
+    # if reg:
+    #     await message.answer(f'REGISTR: \n{reg}')
+    # else:
+    #     await message.answer(f'empty now')
+
+
+
 @dp.message(Text(text='Старт регистраций'))
 async def send_registration(message: Message):
-    await message.answer(text=f'На следующей неделе начинается регистрация на: \n{olympic_reg}')  # ,reply_markup=ReplyKeyboardRemove())
+    spisok = send_dates("SELECT name, date_start, date_finish, form, point FROM olympiads WHERE status_ol == 1")
+    for item in spisok:
+        await message.answer(text=f'ОТКРЫТА РЕГИСТРАЦИЯ НА: {item}')
 
 @dp.message(Text(text='Старт олимпиад'))
 async def send_start(message: Message):
-    await message.answer(text=f'На следующей неделе начинаются олимпиады: \n{olympic_start}')
+    spisok = send_dates("SELECT name, start_reg, finish_reg, form, point FROM olympiads WHERE status_reg == 1")
+    for item in spisok:
+        await message.answer(text=f'БЛИЖАЙШАЯ ОЛИМПИАДА: {item}')
+
 
 @dp.message(Text(text='Напомнить/отказаться'))
 async def send_start(message: Message):
